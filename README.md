@@ -69,6 +69,16 @@ pip install -r requirements.txt
 
 Download 100 classes from HuggingFace ImageNet-1k:
 
+**Option A: Use curated default class list (recommended)**
+```bash
+python scripts/download_data.py \
+    --output_dir ./imagenet_subset \
+    --use_default_classes \
+    --max_train_per_class 1300 \
+    --max_val_per_class 50
+```
+
+**Option B: Random class selection**
 ```bash
 python scripts/download_data.py \
     --output_dir ./imagenet_subset \
@@ -78,7 +88,16 @@ python scripts/download_data.py \
     --seed 42
 ```
 
-**Note**: First download may take 1-2 hours depending on your internet speed.
+**Option C: Custom class list**
+```bash
+python scripts/download_data.py \
+    --output_dir ./imagenet_subset \
+    --class_list 0 1 2 3 4 5 10 15 20 25 \
+    --max_train_per_class 1300 \
+    --max_val_per_class 50
+```
+
+**Note**: First download may take 1-2 hours depending on your internet speed. The default class list covers diverse categories including animals, birds, vehicles, furniture, instruments, tools, food, and misc objects.
 
 ### 2. Find Optimal Learning Rate
 

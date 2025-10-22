@@ -13,6 +13,23 @@ from datasets import load_dataset
 import random
 
 
+# Default curated list of 100 class labels covering diverse categories
+DEFAULT_CLASS_LABELS = [
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,           # Animals (mammals)
+    10, 15, 20, 25, 30, 35, 40, 45, 50, 55, # More animals
+    100, 105, 110, 115, 120, 125, 130, 135, # Birds
+    200, 205, 210, 215, 220, 225, 230, 235, # Aquatic animals
+    300, 305, 310, 315, 320, 325, 330, 335, # Reptiles/amphibians
+    400, 405, 410, 415, 420, 425, 430, 435, # Insects
+    500, 505, 510, 515, 520, 525, 530, 535, # Vehicles
+    600, 605, 610, 615, 620, 625, 630, 635, # Furniture
+    700, 705, 710, 715, 720, 725, 730, 735, # Instruments
+    800, 805, 810, 815, 820, 825, 830, 835, # Tools/equipment
+    900, 905, 910, 915, 920, 925, 930, 935, # Food
+    940, 945, 950, 955, 960, 965, 970, 975  # Misc objects
+]
+
+
 class ImageNetExtractor:
     """Extract and save a subset of ImageNet classes from HuggingFace."""
 
@@ -20,7 +37,8 @@ class ImageNetExtractor:
         self,
         output_dir: str = "./imagenet_subset",
         num_classes: int = 100,
-        seed: int = 42
+        seed: int = 42,
+        class_list: Optional[List[int]] = None
     ):
         """
         Initialize the extractor.
@@ -29,10 +47,13 @@ class ImageNetExtractor:
             output_dir: Directory to save extracted images
             num_classes: Number of classes to extract (default: 100)
             seed: Random seed for reproducibility
+            class_list: Optional list of specific class IDs to extract.
+                       If provided, overrides num_classes and random selection.
         """
         self.output_dir = Path(output_dir)
         self.num_classes = num_classes
         self.seed = seed
+        self.class_list = class_list
         random.seed(seed)
 
         # Create directory structure
@@ -58,7 +79,8 @@ class ImageNetExtractor:
 
     def select_classes(self, total_classes: int = 1000) -> List[int]:
         """
-        Randomly select a subset of classes.
+        Select classes to extract. Uses predefined class_list if provided,
+        otherwise randomly selects classes.
 
         Args:
             total_classes: Total number of classes in ImageNet (1000)
@@ -66,9 +88,17 @@ class ImageNetExtractor:
         Returns:
             List of selected class IDs
         """
-        selected = sorted(random.sample(range(total_classes), self.num_classes))
-        print(f"Selected {self.num_classes} classes: {selected[:10]}... (showing first 10)")
-        return selected
+        if self.class_list is not None:
+            # Use provided class list
+            selected = sorted(self.class_list)
+            print(f"Using predefined class list with {len(selected)} classes")
+            print(f"Classes: {selected[:10]}... (showing first 10)")
+            return selected
+        else:
+            # Random selection
+            selected = sorted(random.sample(range(total_classes), self.num_classes))
+            print(f"Randomly selected {self.num_classes} classes: {selected[:10]}... (showing first 10)")
+            return selected
 
     def save_image(self, image: Image.Image, save_path: Path) -> bool:
         """
@@ -239,7 +269,7 @@ def main():
         "--num_classes",
         type=int,
         default=100,
-        help="Number of classes to extract (default: 100)"
+        help="Number of classes to extract (default: 100, ignored if --use_default_classes is set)"
     )
     parser.add_argument(
         "--max_train_per_class",
@@ -257,16 +287,39 @@ def main():
         "--seed",
         type=int,
         default=42,
-        help="Random seed for class selection (default: 42)"
+        help="Random seed for class selection (default: 42, ignored if --use_default_classes is set)"
+    )
+    parser.add_argument(
+        "--use_default_classes",
+        action="store_true",
+        help="Use the predefined curated list of 100 classes covering diverse categories "
+             "(animals, birds, vehicles, furniture, etc.) instead of random selection"
+    )
+    parser.add_argument(
+        "--class_list",
+        type=int,
+        nargs='+',
+        default=None,
+        help="Custom list of class IDs to extract (space-separated, e.g., --class_list 0 1 2 3)"
     )
 
     args = parser.parse_args()
+
+    # Determine which class list to use
+    class_list = None
+    if args.use_default_classes:
+        class_list = DEFAULT_CLASS_LABELS
+        print("Using default curated class list (100 classes covering diverse categories)")
+    elif args.class_list is not None:
+        class_list = args.class_list
+        print(f"Using custom class list with {len(class_list)} classes")
 
     # Create extractor and run
     extractor = ImageNetExtractor(
         output_dir=args.output_dir,
         num_classes=args.num_classes,
-        seed=args.seed
+        seed=args.seed,
+        class_list=class_list
     )
 
     extractor.extract(
