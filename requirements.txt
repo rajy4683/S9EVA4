@@ -1,0 +1,28 @@
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Data loading and processing
+datasets>=2.14.0
+Pillow>=9.5.0
+
+# AWS S3 support
+boto3>=1.28.0
+
+# HuggingFace deployment
+huggingface-hub>=0.16.0
+
+# Visualization and plotting
+matplotlib>=3.7.0
+numpy>=1.24.0
+
+# Progress bars
+tqdm>=4.65.0
+
+# Optional: For better performance
+# ninja>=1.11.0  # Faster CUDA builds
+
+# Development dependencies (optional)
+# pytest>=7.4.0
+# black>=23.0.0
+# flake8>=6.0.0
